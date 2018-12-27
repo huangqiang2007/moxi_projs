@@ -22,196 +22,177 @@ uint32_t WRITE_24C02_ADDR = 0; //写24c02的首地址
 //// global variables from other file. 
 extern char ADC_ON_OFF; // from adc.c
 
-//初始化IIC接口
+/*
+*初始化IIC接口
+*/
 void AT24CXX_Init(void)
 {
 	IIC_Init();
 }
-//在AT24CXX指定地址读出一个数据
-//ReadAddr:开始读数的地址  
-//返回值  :读到的数据
+
+/*
+* 在AT24CXX指定地址读出一个数据
+* ReadAddr:开始读数的地址
+* 返回值  :读到的数据
+*/
 uint8_t AT24CXX_ReadOneByte(uint16_t ReadAddr)
 {				  
-	uint8_t temp=0;		  	    																 
-    IIC_Start();  
-	if(EE_TYPE>AT24C16)
-	{
-		IIC_Send_Byte(0XA0);	   //发送写命令
-		IIC_Wait_Ack();
-		IIC_Send_Byte(ReadAddr>>8);//发送高地址
-		IIC_Wait_Ack();		 
-	}else IIC_Send_Byte(0XA0+((ReadAddr/256)<<1));   //发送器件地址0XA0,写数据 	 
+	uint8_t temp=0;
 
-	IIC_Wait_Ack(); 
-    IIC_Send_Byte(ReadAddr%256);   //发送低地址
-	IIC_Wait_Ack();	    
-	IIC_Start();  	 	   
-	IIC_Send_Byte(0XA1);           //进入接收模式			   
-	IIC_Wait_Ack();	 
-    temp=IIC_Read_Byte(0);		   
-    IIC_Stop();//产生一个停止条件	    
+	IIC_Start();
+	if(EE_TYPE>AT24C16) {
+		IIC_Send_Byte(0XA0); //发送写命令
+		IIC_Wait_Ack();
+		IIC_Send_Byte(ReadAddr>>8); //发送高地址
+		IIC_Wait_Ack();		 
+	} else
+		IIC_Send_Byte(0XA0+((ReadAddr/256)<<1)); //发送器件地址0XA0,写数据
+
+	IIC_Wait_Ack();
+	IIC_Send_Byte(ReadAddr%256); //发送低地址
+	IIC_Wait_Ack();
+	IIC_Start();
+	IIC_Send_Byte(0XA1); //进入接收模式
+	IIC_Wait_Ack();
+	temp=IIC_Read_Byte(0);
+	IIC_Stop(); //产生一个停止条件
+
 	return temp;
 }
-//在AT24CXX指定地址写入一个数据
-//WriteAddr  :写入数据的目的地址    
-//DataToWrite:要写入的数据
+
+/*
+* 在AT24CXX指定地址写入一个数据
+* WriteAddr  :写入数据的目的地址
+* DataToWrite:要写入的数据
+*/
 void AT24CXX_WriteOneByte(uint16_t WriteAddr,uint8_t DataToWrite)
 {				   	  	    																 
-    IIC_Start();  
-	if(EE_TYPE>AT24C16)
-	{
-		IIC_Send_Byte(0XA0);	    //发送写命令
+	IIC_Start();
+	if(EE_TYPE>AT24C16) {
+		IIC_Send_Byte(0XA0); //发送写命令
 		IIC_Wait_Ack();
 		IIC_Send_Byte(WriteAddr>>8);//发送高地址
- 	}else
-	{
-		IIC_Send_Byte(0XA0+((WriteAddr/256)<<1));   //发送器件地址0XA0,写数据 
-	}	 
-	IIC_Wait_Ack();	   
-    IIC_Send_Byte(WriteAddr%256);   //发送低地址
-	IIC_Wait_Ack(); 	 										  		   
-	IIC_Send_Byte(DataToWrite);     //发送字节							   
-	IIC_Wait_Ack();  		    	   
-    IIC_Stop();//产生一个停止条件 
-	delay_ms(10);	 
+	} else {
+		IIC_Send_Byte(0XA0+((WriteAddr/256)<<1));   //发送器件地址0XA0,写数据
+	}
+	IIC_Wait_Ack();
+	IIC_Send_Byte(WriteAddr%256); //发送低地址
+	IIC_Wait_Ack();
+	IIC_Send_Byte(DataToWrite); //发送字节
+	IIC_Wait_Ack();
+	IIC_Stop(); //产生一个停止条件
+	delay_ms(10);
 }
-//在AT24CXX里面的指定地址开始写入长度为Len的数据
-//该函数用于写入16bit或者32bit的数据.
-//WriteAddr  :开始写入的地址  
-//DataToWrite:数据数组首地址
-//Len        :要写入数据的长度2,4
+
+/*
+* 在AT24CXX里面的指定地址开始写入长度为Len的数据
+* 该函数用于写入16bit或者32bit的数据.
+* WriteAddr: 开始写入的地址 
+* DataToWrite: 数据数组首地址
+* Len: 要写入数据的长度2,4
+*/
 void AT24CXX_WriteLenByte(uint16_t WriteAddr,uint32_t DataToWrite,uint8_t Len)
-{  	
+{
 	uint8_t t;
-	for(t=0;t<Len;t++)
-	{
-		AT24CXX_WriteOneByte(WriteAddr+t,(DataToWrite>>(8*t))&0xff);
+
+	for(t=0;t<Len;t++) {
+		AT24CXX_WriteOneByte(WriteAddr + t, (DataToWrite>>(8*t))&0xff);
 	}												    
 }
 
-//在AT24CXX里面的指定地址开始读出长度为Len的数据
-//该函数用于读出16bit或者32bit的数据.
-//ReadAddr   :开始读出的地址 
-//返回值     :数据
-//Len        :要读出数据的长度2,4
-uint32_t AT24CXX_ReadLenByte(uint16_t ReadAddr,uint8_t Len)
-{  	
+/*
+* 在AT24CXX里面的指定地址开始读出长度为Len的数据
+* 该函数用于读出16bit或者32bit的数据.
+* ReadAddr: 开始读出的地址 
+* 返回值: 数据
+* Len: 要读出数据的长度2,4
+*/
+uint32_t AT24CXX_ReadLenByte(uint16_t ReadAddr, uint8_t Len)
+{
 	uint8_t t;
 	uint32_t temp=0;
-	for(t=0;t<Len;t++)
-	{
-		temp<<=8;
-		temp+=AT24CXX_ReadOneByte(ReadAddr+Len-t-1); 	 				   
+
+	for(t=0;t<Len;t++) {
+		temp <<= 8;
+		temp += AT24CXX_ReadOneByte(ReadAddr+Len-t-1);
 	}
-	return temp;												    
+
+	return temp;										    
 }
-//检查AT24CXX是否正常
-//这里用了24XX的最后一个地址(255)来存储标志字.
-//如果用其他24C系列,这个地址要修改
-//返回1:检测失败
-//返回0:检测成功
+
+/*
+* 检查AT24CXX是否正常
+* 这里用了24XX的最后一个地址(255)来存储标志字.
+* 如果用其他24C系列,这个地址要修改
+* 返回1:检测失败
+* 返回0:检测成功
+*/
 uint8_t AT24CXX_Check(void)
 {
 	uint8_t temp;
-	temp=AT24CXX_ReadOneByte(255);//避免每次开机都写AT24CXX			   
-	if(temp==0X55)return 0;		   
-	else//排除第一次初始化的情况
-	{
+
+	temp = AT24CXX_ReadOneByte(255); //避免每次开机都写AT24CXX
+	if(temp==0X55)
+		return 0;
+	else { //排除第一次初始化的情况
 		AT24CXX_WriteOneByte(255,0X55);
-	    temp=AT24CXX_ReadOneByte(255);	  
-		if(temp==0X55)return 0;
+	    temp=AT24CXX_ReadOneByte(255);
+		if(temp==0X55)
+			return 0;
 	}
-	return 1;											  
+
+	return 1;
 }
 
-//在AT24CXX里面的指定地址开始读出指定个数的数据
-//ReadAddr :开始读出的地址 对24c02为0~255
-//pBuffer  :数据数组首地址
-//NumToRead:要读出数据的个数
-void AT24CXX_Read(uint16_t ReadAddr,uint8_t *pBuffer,uint16_t NumToRead)
+/*
+* 在AT24CXX里面的指定地址开始读出指定个数的数据
+* ReadAddr :开始读出的地址 对24c02为0~255
+* pBuffer  :数据数组首地址
+* NumToRead:要读出数据的个数
+*/
+void AT24CXX_Read(uint16_t ReadAddr, uint8_t *pBuffer, uint16_t NumToRead)
 {
-	while(NumToRead)
-	{
-		*pBuffer++=AT24CXX_ReadOneByte(ReadAddr++);	
+	while(NumToRead) {
+		*pBuffer++ = AT24CXX_ReadOneByte(ReadAddr++);
 		NumToRead--;
 	}
-}  
-//在AT24CXX里面的指定地址开始写入指定个数的数据
-//WriteAddr :开始写入的地址 对24c02为0~255
-//pBuffer   :数据数组首地址
-//NumToWrite:要写入数据的个数
+}
+
+/*
+* 在AT24CXX里面的指定地址开始写入指定个数的数据
+* WriteAddr :开始写入的地址 对24c02为0~255
+* pBuffer   :数据数组首地址
+* NumToWrite:要写入数据的个数
+*/
 void AT24CXX_Write(uint16_t WriteAddr,uint8_t *pBuffer,uint16_t NumToWrite)
 {
-	while(NumToWrite--)
-	{
+	while(NumToWrite--) {
 		AT24CXX_WriteOneByte(WriteAddr,*pBuffer);
 		WriteAddr++;
 		pBuffer++;
 	}
 }
- 
+
 void AT24CXX_Addr_Init(void)
 {
 	uint32_t addr = 0;
-	if(1 == AT24CXX_Check())//检测24c02;//返回1:检测失败 //返回0:检测成功
-			{
-//				sprintf(Tx_Buffer,"\r\n [ERORR]  24C02 Check Failed!  Please Check! (time.c-158 line)\r\n");
-//				UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-				
-			}
-			else
-			{
-				addr = AT24CXX_ReadLenByte(0,4);//从地址0读出总时长的存储首地址值
-//				sprintf(Tx_Buffer,"\r\n [INFO]  First Address of 24C02 is %d ; %x.(24cxx.c-165 line)\r\n",addr,addr);
-//				UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-				AT24CXX_WriteLenByte(0,4,4);
-				addr = AT24CXX_ReadLenByte(0,4);
-//				sprintf(Tx_Buffer,"\r\n [INFO]  First Address of 24C02 is %d ; %x.(24cxx.c-169 line)\r\n",addr,addr);
-//				UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-				
-			//	if(addr > 0 && addr <= 255)
-			//	{
-			//		WRITE_24C02_ADDR = addr;
-			//	}
-			//	else if (addr > 255)
-			//	{
-			//		sprintf(Tx_Buffer,"\r\n [ERROR]  First Address of 24C02 is greater 256....(24cxx.c-164 line)\r\n");
-			//		UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-			//	}
-			//	else
-			//	{
-			//		AT24CXX_WriteLenByte(0,4,4);	//初始化首地址从4开始
-			//		WRITE_24C02_ADDR = 4;
-			//		sprintf(Tx_Buffer,"\r\n [INFO]  First use of 24C02.(24cxx.c-157 line)\r\n");
-			//		UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-			//	}
 
-				if((addr & 0x80000000) > 0) //第一次使用24c02
-				{
-					AT24CXX_WriteLenByte(0,4,4);	//初始化首地址从4开始
-					WRITE_24C02_ADDR = 4;
-//					sprintf(Tx_Buffer,"\r\n [INFO]  First use of 24C02.(24cxx.c-193 line)\r\n");
-//					UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-				}
-				else if(addr > 0 && addr <= 255)
-				{
-					WRITE_24C02_ADDR = addr;
-				}
-				else
-				{
-//					sprintf(Tx_Buffer,"\r\n [ERROR]  First Address of 24C02 is error....(24cxx.c-202 line)\r\n");
-//					UART_Send( Tx_Buffer, (uint32_t) strlen(Tx_Buffer));
-				}
-			}
-	
+	if(1 == AT24CXX_Check()) { //检测24c02; //返回1:检测失败 //返回0:检测成功
+		//printf(Tx_Buffer,"\r\n [ERORR]  24C02 Check Failed!  Please Check! (time.c-158 line)\r\n");
+	} else {
+		addr = AT24CXX_ReadLenByte(0,4); //从地址0读出总时长的存储首地址值
+		//printf(Tx_Buffer,"\r\n [INFO]  First Address of 24C02 is %d ; %x.(24cxx.c-165 line)\r\n",addr,addr);
+		AT24CXX_WriteLenByte(0,4,4);
+		addr = AT24CXX_ReadLenByte(0,4);
+		//printf(Tx_Buffer,"\r\n [INFO]  First Address of 24C02 is %d ; %x.(24cxx.c-169 line)\r\n",addr,addr);
+		if((addr & 0x80000000) > 0) { //第一次使用24c02
+			AT24CXX_WriteLenByte(0,4,4); //初始化首地址从4开始
+			WRITE_24C02_ADDR = 4;
+			//printf(Tx_Buffer,"\r\n [INFO]  First use of 24C02.(24cxx.c-193 line)\r\n");
+		} else if (addr > 0 && addr <= 255) {
+			WRITE_24C02_ADDR = addr;
+		} else {
+			//printf(Tx_Buffer,"\r\n [ERROR]  First Address of 24C02 is error....(24cxx.c-202 line)\r\n");
+		}
+	}
 }
-
-
-
-
-
-
-
-
-
-
