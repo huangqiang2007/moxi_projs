@@ -22,56 +22,45 @@
 
 int main(void)
 {
-		SystemInit();
-		LED_Init();
-		Close_CMOS();
-//	Open_CMOS();  //open cmos
-		KEY_Init();
-		Exti_Init();
-	
-		/*timer1 is for timer*/
-		TIM_INT_Config();
-		TIM_OUT_Config();
-		TIM1_Disable();
-	
-	  /* USART1 config 115200 8-N-1 */
-		USART_Configuration();		
-		delay_init();
-		AT24CXX_Init();			//IIC初始化 
-	
-		PWM_Channel_Init(); //PWM初始化
-		
-		//24c02首地址初始化
-		AT24CXX_Addr_Init();
-		
-		/*timer3 is for PWM*/
-		TIM_Config();
-		TIM_PWM_Config();
-		
-		if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_4) == 0 )//判断开机时，开机键是否被按下。
-		{
-			//开机键被按下
-		}
-		else{ //开机键未按下
-			printf("\r\n [INFO]  waiting for button is pressed .(MAIN.c-52 line)   \r\n");
-			Enter_stopmode(); //enter stop mode;
-		}
-//		printf("\r\n [INFO]  woke up  .(MAIN.c-52 line)   \r\n");
-//ADC1_DMA_Init();
-//	TIM1_Enable();
-//	Open_CMOS();  //open cmos
-	  while(1)
-		{	
-//			counter++;
-//			if (counter%100 ==0)
-//			{
-				//printf("\r\n [INFO]  alive  \r\n");
-//				counter=0;
-//			}
-			DMA1_ADRRESS();
-			KEY_ADDRESS();
-			TIM1_ADRRESS();
-//			printf("\r\n [INFO]  woke up 2 .(MAIN.c-52 line)   \r\n");
-      delay_ms(50);
-		}	
+	SystemInit();
+	LED_Init();
+	Close_CMOS();
+	KEY_Init();
+	Exti_Init();
+
+	/*timer1 is for timer*/
+	TIM_INT_Config();
+	TIM_OUT_Config();
+	TIM1_Disable();
+
+	/* USART1 config 115200 8-N-1 */
+	USART_Configuration();		
+	delay_init();
+
+	/* IIC初始化 */
+	AT24CXX_Init();
+
+	/* PWM 初始化 */
+	PWM_Channel_Init();
+
+	/* 24c02首地址初始化 */
+	AT24CXX_Addr_Init();
+
+	/* timer3 is for PWM */
+	TIM_Config();
+	TIM_PWM_Config();
+
+	if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_4) == 0 ) { /* 判断开机时，开机键是否被按下 */
+		/* 开机键被按下 */
+	} else { /* 开机键未按下 */
+		printf("\r\n [INFO]  waiting for button is pressed .(MAIN.c-52 line)   \r\n");
+		Enter_stopmode(); //enter stop mode;
+	}
+
+	while(1) {
+		DMA1_ADRRESS();
+		KEY_ADDRESS();
+		TIM1_ADRRESS();
+		delay_ms(50);
+	}
 }

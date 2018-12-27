@@ -2,10 +2,10 @@
 #define	__LED_H
 
 #include "stm32f0xx.h"
-#define LED1_PIN      GPIO_Pin_9
-#define LED2_PIN       GPIO_Pin_10
-#define LED1_PORT       GPIOA	
-#define LED2_PORT       GPIOA
+#define LED1_PIN 	GPIO_Pin_9
+#define LED2_PIN 	GPIO_Pin_10
+#define LED1_PORT	GPIOA	
+#define LED2_PORT   GPIOA
 void LED_Init(void);
 void Exti_Init(void);
 void LED_Open(void);
@@ -26,4 +26,3 @@ void booter_Close(void);
 
 void Enter_stopmode(void);
 #endif /* __LED_H */
-
